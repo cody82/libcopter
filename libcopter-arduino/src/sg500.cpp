@@ -24,10 +24,23 @@ void SG500::init()
 
     udp.begin(udpPort);
 
+    // reset
+    Serial.println("Reset");
+    buffer[0] = 0x0F;
+    udp.beginPacket(udpAddress, udpPort);
+    udp.write(buffer, 1);
+    udp.endPacket();
+
+    delay(1000);
+
+    // type
+    Serial.println("Type");
     buffer[0] = 0x28;
-    request(buffer, 1);
+    while(!request(buffer, 1));
+    // version
+    Serial.println("Version");
     buffer[0] = 0x42;
-    request(buffer, 1);
+    while(!request(buffer, 1));
 }
 
 void SG500::command(float roll, float pitch, float yaw, float height, bool launch, bool panic, bool land, bool recalibrate)
@@ -56,48 +69,55 @@ void SG500::command(float roll, float pitch, float yaw, float height, bool launc
 void SG500::makeCommand(byte *command, byte height, byte yaw, byte pitch, byte roll, bool launch, bool panic, bool land, bool recalibrate, bool auto_altitude,
             byte yaw_trim, byte pitch_trim, byte roll_trim, bool compass, byte percent_raw)
 {
-    command[0] = 0xFF;
-    command[1] = 0x08;
-    command[2] = (byte)(height & 0xFF);
-    command[3] = (byte)(yaw & 0x7F);
-    command[4] = (byte)(pitch & 0x7F);
-    command[5] = (byte)(roll & 0x7F);
+	command[0] = 0xFF;
+	command[1] = 0x08;
+	command[2] = height & 0xFF;
+	command[3] = yaw & 0x7F;
+	command[4] = pitch & 0x7F;
+	command[5] = roll & 0x7F;
+	
+	if (auto_altitude) command[6] |= 0x80;
+	if (recalibrate)   command[6] |= 0x40;
 
-    if (auto_altitude) command[6] |= 0x80;
-    if (recalibrate) command[6] |= 0x40;
+	command[6] |= yaw_trim & 0x3F;
+	command[7] = pitch_trim & 0x3F;
+	command[8] = roll_trim & 0x3F;
 
-    command[6] |= (byte)(yaw_trim & 0x3F);
-    command[7] = (byte)(pitch_trim & 0x3F);
-    command[8] = (byte)(roll_trim & 0x3F);
+    command[9] = 0;
+	if (launch)  command[9] |= 0x40;
+	if (panic)   command[9] |= 0x20;
+	if (land)    command[9] |= 0x80;
+	if (compass) command[9] |= 0x10;
 
-    if (launch) command[9] |= 0x40;
-    if (panic) command[9] |= 0x20;
-    if (land) command[9] |= 0x80;
-    if (compass) command[9] |= 0x10;
+	command[9] |= percent_raw & 0x03;
 
-    command[9] |= (byte)(percent_raw & 0x03);
-
-    byte sum = 0;
-    for (int i = 1; i < 10; i++) sum += command[i];
-    command[10] = (byte)(0xFF - sum);
+	// checksum
+	uint8_t sum = 0;
+	for (int i=1; i<10; i++) sum += uint8_t(command[i]);
+	command[10] = 0xFF - sum;
 }
 
 
-void SG500::request(const byte *data, int length)
+boolean SG500::request(const byte *data, int length)
 {
     byte buffer[64];
+    boolean ok = false;
 
-    udp.beginPacket(udpAddress, udpPort);
-    udp.write(data, length);
-    udp.endPacket();
-
-    for(int i=0;i<10;++i)
+    while(!ok)
     {
-        delay(10);
+        udp.beginPacket(udpAddress, udpPort);
+        udp.write(data, length);
+        udp.endPacket();
+
+        delay(100);
+
         udp.parsePacket();
         if(udp.read(buffer, sizeof(buffer)) > 0){
-            Serial.print("Server to client: ");
+            Serial.print("Received: ");
             Serial.println((char *)buffer);
+            ok = true;
         }
     }
+
+    return ok;
 }
