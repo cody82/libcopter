@@ -75,7 +75,8 @@ void SG500::makeCommand(byte *command, byte height, byte yaw, byte pitch, byte r
 	command[3] = yaw & 0x7F;
 	command[4] = pitch & 0x7F;
 	command[5] = roll & 0x7F;
-	
+
+	command[6] = 0;
 	if (auto_altitude) command[6] |= 0x80;
 	if (recalibrate)   command[6] |= 0x40;
 

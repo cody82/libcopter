@@ -8,15 +8,6 @@ uint16_t pitch_raw;
 uint16_t yaw_raw;
 uint16_t roll_raw;
 
-uint16_t touch1;
-uint16_t touch2;
-uint16_t touch3;
-uint16_t touch4;
-boolean button1;
-boolean button2;
-boolean button3;
-boolean button4;
-
 float throttle;
 float pitch;
 float yaw;
@@ -32,12 +23,25 @@ SG500 copter;
 
 float convertAnalog(uint16_t value)
 {
-  return ((((float)value) / 4096) - 0.5f) * 2.0f;
+  return ((((float)value) / 4096) - 0.5f) * 2.0f * 0.8f;
 }
 
 void setup() {
+  pinMode(25, INPUT_PULLUP);
+  pinMode(26, INPUT_PULLUP);
+  pinMode(27, INPUT_PULLUP);
+  pinMode(14, INPUT_PULLUP);
+  pinMode(23, OUTPUT);
+  pinMode(19, OUTPUT);
+  pinMode(18, OUTPUT);
+  pinMode(5, OUTPUT);
+  digitalWrite(23, 1);
+  digitalWrite(19, 1);
+  digitalWrite(18, 1);
+  digitalWrite(5, 1);
   Serial.begin(115200);
   copter.init();
+  digitalWrite(23, 0);
 }
 
 void loop() {
@@ -46,41 +50,25 @@ void loop() {
   yaw_raw = analogRead(34);
   roll_raw = analogRead(35);
 
-  touch1 = touchRead(27);
-  button1 = touch1 < 30;
-  touch2 = touchRead(14);
-  button2 = touch2 < 30;
-  touch3 = touchRead(12);
-  button3 = touch3 < 30;
-  touch4 = touchRead(13);
-  button4 = touch4 < 30;
+  throttle = convertAnalog(throttle_raw) + 0.02f;
+  pitch = -convertAnalog(pitch_raw) - 0.02f;
+  yaw = convertAnalog(yaw_raw) + 0.02f;
+  roll = convertAnalog(roll_raw) + 0.03f;
 
-
-  throttle = convertAnalog(throttle_raw);
-  pitch = convertAnalog(pitch_raw);
-  yaw = convertAnalog(yaw_raw);
-  roll = convertAnalog(roll_raw);
+  takeoff = digitalRead(25) == 0;
+  land = digitalRead(26) == 0;
+  panic = digitalRead(27) == 0;
+  calibrate = digitalRead(14) == 0;
 
   Serial.print("T: ");Serial.print(throttle);Serial.print(", ");
   Serial.print("Y: ");Serial.print(yaw);Serial.print(", ");
   Serial.print("P: ");Serial.print(pitch);Serial.print(", ");
   Serial.print("R: ");Serial.print(roll);Serial.print(", ");
-  Serial.print("B1: ");Serial.print(button1);Serial.print(", ");
-  Serial.print("B2: ");Serial.print(button2);Serial.print(", ");
-  Serial.print("B3: ");Serial.print(button3);Serial.print(", ");
-  Serial.print("B4: ");Serial.print(button4);
+  Serial.print("Takeoff: ");Serial.print(takeoff);Serial.print(", ");
+  Serial.print("Land: ");Serial.print(land);Serial.print(", ");
+  Serial.print("Panic: ");Serial.print(panic);Serial.print(", ");
+  Serial.print("Calibrate: ");Serial.print(calibrate);
   Serial.println();
-
-  /*takeoff = digitalRead(25);
-  land = digitalRead(26);
-  panic = digitalRead(27);
-  calibrate = digitalRead(14);
-*/
-
-  takeoff = 0;
-  land = 0;
-  panic = 0;
-  calibrate = 0;
 
   copter.command(roll, pitch, yaw, throttle, takeoff, panic, land, calibrate);
 
