@@ -43,7 +43,7 @@ void SG500::init()
     while(!request(buffer, 1));
 }
 
-void SG500::command(float roll, float pitch, float yaw, float height, bool launch, bool panic, bool land, bool recalibrate)
+bool SG500::command(float roll, float pitch, float yaw, float height, bool launch, bool panic, bool land, bool recalibrate)
 {
     byte buffer[11];
 
@@ -61,9 +61,18 @@ void SG500::command(float roll, float pitch, float yaw, float height, bool launc
         launch, panic, land, recalibrate
     );
 
-    udp.beginPacket(udpAddress, udpPort);
+    if(!udp.beginPacket(udpAddress, udpPort))
+    {
+        return false;
+    }
     udp.write(buffer, sizeof(buffer));
-    udp.endPacket();
+
+    if(!udp.endPacket())
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void SG500::makeCommand(byte *command, byte height, byte yaw, byte pitch, byte roll, bool launch, bool panic, bool land, bool recalibrate, bool auto_altitude,

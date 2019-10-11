@@ -15,7 +15,7 @@ class SG500
 
         void init();
 
-        void command(float roll, float pitch, float yaw, float height, bool launch = false, bool panic = false, bool land = false, bool recalibrate = false);
+        bool command(float roll, float pitch, float yaw, float height, bool launch = false, bool panic = false, bool land = false, bool recalibrate = false);
 
     protected:
         void makeCommand(byte *command, byte height, byte yaw, byte pitch, byte roll, bool launch, bool panic, bool land, bool recalibrate, bool auto_altitude = true,

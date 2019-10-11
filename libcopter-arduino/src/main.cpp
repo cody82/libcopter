@@ -70,7 +70,11 @@ void loop() {
   Serial.print("Calibrate: ");Serial.print(calibrate);
   Serial.println();
 
-  copter.command(roll, pitch, yaw, throttle, takeoff, panic, land, calibrate);
+  if(!copter.command(roll, pitch, yaw, throttle, takeoff, panic, land, calibrate))
+  {
+    Serial.println("Send error, restart.");
+    ESP.restart();
+  }
 
   delay(20);
 }
