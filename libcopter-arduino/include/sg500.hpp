@@ -13,11 +13,13 @@ class SG500
     public:
         SG500();
 
-        void init();
+        void beginInit();
+        bool initReady();
 
         bool command(float roll, float pitch, float yaw, float height, bool launch = false, bool panic = false, bool land = false, bool recalibrate = false);
 
     protected:
+        void init();
         void makeCommand(byte *command, byte height, byte yaw, byte pitch, byte roll, bool launch, bool panic, bool land, bool recalibrate, bool auto_altitude = true,
             byte yaw_trim = 0x10, byte pitch_trim = 0x10, byte roll_trim = 0x10, bool compass = false, byte percent_raw = 0);
 

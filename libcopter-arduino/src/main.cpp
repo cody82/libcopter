@@ -21,30 +21,14 @@ int calibrate;
 
 SG500 copter;
 
+//#define DONT_CONNECT
+
 float convertAnalog(uint16_t value)
 {
   return ((((float)value) / 4096) - 0.5f) * 2.0f * 0.8f;
 }
 
-void setup() {
-  pinMode(25, INPUT_PULLUP);
-  pinMode(26, INPUT_PULLUP);
-  pinMode(27, INPUT_PULLUP);
-  pinMode(14, INPUT_PULLUP);
-  pinMode(23, OUTPUT);
-  pinMode(19, OUTPUT);
-  pinMode(18, OUTPUT);
-  pinMode(5, OUTPUT);
-  digitalWrite(23, 1);
-  digitalWrite(19, 1);
-  digitalWrite(18, 1);
-  digitalWrite(5, 1);
-  Serial.begin(115200);
-  copter.init();
-  digitalWrite(23, 0);
-}
-
-void loop() {
+void input() {
   throttle_raw = analogRead(36);
   pitch_raw = analogRead(39);
   yaw_raw = analogRead(34);
@@ -69,12 +53,53 @@ void loop() {
   Serial.print("Panic: ");Serial.print(panic);Serial.print(", ");
   Serial.print("Calibrate: ");Serial.print(calibrate);
   Serial.println();
+}
 
+void led(byte leds) {
+  digitalWrite(23, (leds & 1) == 0);
+  digitalWrite(19, (leds & 2) == 0);
+  digitalWrite(18, (leds & 4) == 0);
+  digitalWrite(5, (leds & 8) == 0);
+}
+
+byte led_blink = 1;
+void setup() {
+  pinMode(25, INPUT_PULLDOWN);
+  pinMode(26, INPUT_PULLDOWN);
+  pinMode(27, INPUT_PULLDOWN);
+  pinMode(14, INPUT_PULLDOWN);
+  pinMode(23, OUTPUT);
+  pinMode(19, OUTPUT);
+  pinMode(18, OUTPUT);
+  pinMode(5, OUTPUT);
+  led(0);
+  Serial.begin(115200);
+
+#ifndef DONT_CONNECT
+  copter.beginInit();
+  while(!copter.initReady())
+  {
+    led(led_blink);
+    delay(500);
+    led_blink <<= 1;
+    if(led_blink > 8)
+      led_blink = 1;
+    Serial.print(".");
+  }
+#endif
+  led(0xff);
+}
+
+void loop() {
+  input();
+
+#ifndef DONT_CONNECT
   if(!copter.command(roll, pitch, yaw, throttle, takeoff, panic, land, calibrate))
   {
     Serial.println("Send error, restart.");
     ESP.restart();
   }
+#endif
 
   delay(20);
 }

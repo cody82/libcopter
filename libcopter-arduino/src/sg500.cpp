@@ -5,16 +5,27 @@ SG500::SG500()
 
 }
 
+
+void SG500::beginInit()
+{
+    WiFi.begin(ssid, pwd);
+}
+
+bool SG500::initReady()
+{
+    if (WiFi.status() != WL_CONNECTED) {
+        return false;
+    }
+    else
+    {
+        init();
+        return true;
+    }
+}
+
 void SG500::init()
 {
     byte buffer[1];
-
-    WiFi.begin(ssid, pwd);
-
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
 
     Serial.println("");
     Serial.print("Connected to ");
