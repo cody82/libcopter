@@ -3,7 +3,7 @@
 # Connections
 
 |  ESP32 Pin | Function | Input |
-|---|---|---|---|---|
+|---|---|---|
 | GPIO36 | ADC1_CH0 | Throttle |
 | GPIO39 | ADC1_CH3 | Pitch |
 | GPIO34 | ADC1_CH6 | Yaw |
