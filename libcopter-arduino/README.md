@@ -14,9 +14,9 @@
 | GPIO26 | Digital Input, Int. Pull-Down, Active Low | Land |
 | GPIO27 | Digital Input, Int. Pull-Down, Active Low | Panic |
 | GPIO14 | Digital Input, Int. Pull-Down, Active Low | Calibrate |
-| GPIO23 | Digital Output, Active Low | Connection Idicator |
-| GPIO19 | Digital Output, Active Low | Connection Idicator |
-| GPIO18 | Digital Output, Active Low | Connection Idicator |
-| GPIO5  | Digital Output, Active Low | Connection Idicator |
+| GPIO23 | Digital Output, Active Low | Connection Indicator |
+| GPIO19 | Digital Output, Active Low | Connection Indicator |
+| GPIO18 | Digital Output, Active Low | Connection Indicator |
+| GPIO5  | Digital Output, Active Low | Connection Indicator |
 
 ![](images/ESP32-DOIT-DEVKIT-V1-Board-Pinout-30-GPIOs.webp)
