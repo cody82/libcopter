@@ -25,7 +25,7 @@ SG500 copter;
 
 float convertAnalog(uint16_t value)
 {
-  return ((((float)value) / 4096) - 0.5f) * 2.0f * 0.8f;
+  return ((((float)value) / 4096) - 0.5f) * 2.0f;
 }
 
 void input() {
@@ -34,10 +34,10 @@ void input() {
   yaw_raw = analogRead(34);
   roll_raw = analogRead(35);
 
-  throttle = convertAnalog(throttle_raw) + 0.02f;
-  pitch = -convertAnalog(pitch_raw) - 0.02f;
-  yaw = convertAnalog(yaw_raw) + 0.02f;
-  roll = convertAnalog(roll_raw) + 0.03f;
+  throttle = convertAnalog(throttle_raw) + 0.24f;
+  pitch = -convertAnalog(pitch_raw) - 0.26f;
+  yaw = convertAnalog(yaw_raw) + 0.26f;
+  roll = convertAnalog(roll_raw) + 0.23f;
 
   takeoff = digitalRead(25) == 0;
   land = digitalRead(26) == 0;
@@ -56,18 +56,18 @@ void input() {
 }
 
 void led(byte leds) {
-  digitalWrite(23, (leds & 1) == 0);
-  digitalWrite(19, (leds & 2) == 0);
-  digitalWrite(18, (leds & 4) == 0);
-  digitalWrite(5, (leds & 8) == 0);
+  digitalWrite(23, (leds & 1) == 1);
+  digitalWrite(19, (leds & 2) == 1);
+  digitalWrite(18, (leds & 4) == 1);
+  digitalWrite(5, (leds & 8) == 1);
 }
 
 byte led_blink = 1;
 void setup() {
-  pinMode(25, INPUT_PULLDOWN);
-  pinMode(26, INPUT_PULLDOWN);
-  pinMode(27, INPUT_PULLDOWN);
-  pinMode(14, INPUT_PULLDOWN);
+  pinMode(25, INPUT_PULLUP);
+  pinMode(26, INPUT_PULLUP);
+  pinMode(27, INPUT_PULLUP);
+  pinMode(14, INPUT_PULLUP);
   pinMode(23, OUTPUT);
   pinMode(19, OUTPUT);
   pinMode(18, OUTPUT);
@@ -82,7 +82,7 @@ void setup() {
     led(led_blink);
     delay(500);
     led_blink <<= 1;
-    if(led_blink > 8)
+    if(led_blink > 2)
       led_blink = 1;
     Serial.print(".");
   }
