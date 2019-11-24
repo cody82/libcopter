@@ -28,16 +28,21 @@ float convertAnalog(uint16_t value)
   return ((((float)value) / 4096) - 0.5f) * 2.0f * 0.8f;
 }
 
+float ThrottleOffset;
+float PitchOffset;
+float YawOffset;
+float RollOffset;
+
 void input() {
   throttle_raw = analogRead(36);
   pitch_raw = analogRead(39);
   yaw_raw = analogRead(34);
   roll_raw = analogRead(35);
 
-  throttle = convertAnalog(throttle_raw) + 0.02f;
-  pitch = -convertAnalog(pitch_raw) - 0.02f;
-  yaw = convertAnalog(yaw_raw) + 0.02f;
-  roll = convertAnalog(roll_raw) + 0.03f;
+  throttle = convertAnalog(throttle_raw) + ThrottleOffset;
+  pitch = -convertAnalog(pitch_raw) - PitchOffset;
+  yaw = convertAnalog(yaw_raw) + YawOffset;
+  roll = convertAnalog(roll_raw) + RollOffset;
 
   takeoff = digitalRead(25) == 0;
   land = digitalRead(26) == 0;
@@ -55,6 +60,32 @@ void input() {
   Serial.println();
 }
 
+void Calibrate() {
+  ThrottleOffset = 0.0f;
+  PitchOffset = 0.0f;
+  YawOffset = 0.0f;
+  RollOffset = 0.0f;
+  
+  for(int i=0;i<10;++i)
+  {
+    input();
+    ThrottleOffset -= throttle;
+    PitchOffset -= pitch;
+    YawOffset -= yaw;
+    RollOffset -= roll;
+  }
+  ThrottleOffset *= 0.1f;
+  PitchOffset *= 0.1f;
+  YawOffset *= 0.1f;
+  RollOffset *= 0.1f;
+  
+  Serial.println("Calibration:");
+  Serial.print("Toffset: ");Serial.print(ThrottleOffset);Serial.print(", ");
+  Serial.print("Yoffset: ");Serial.print(PitchOffset);Serial.print(", ");
+  Serial.print("Poffset: ");Serial.print(YawOffset);Serial.print(", ");
+  Serial.print("Roffset: ");Serial.print(RollOffset);
+}
+
 void led(byte leds) {
   digitalWrite(23, (leds & 1) == 0);
   digitalWrite(19, (leds & 2) == 0);
@@ -63,18 +94,10 @@ void led(byte leds) {
 }
 
 byte led_blink = 1;
-void setup() {
-  pinMode(25, INPUT_PULLDOWN);
-  pinMode(26, INPUT_PULLDOWN);
-  pinMode(27, INPUT_PULLDOWN);
-  pinMode(14, INPUT_PULLDOWN);
-  pinMode(23, OUTPUT);
-  pinMode(19, OUTPUT);
-  pinMode(18, OUTPUT);
-  pinMode(5, OUTPUT);
-  led(0);
-  Serial.begin(115200);
 
+void connect()
+{
+  led(0);
 #ifndef DONT_CONNECT
   copter.beginInit();
   while(!copter.initReady())
@@ -90,6 +113,22 @@ void setup() {
   led(0xff);
 }
 
+void setup() {
+  pinMode(25, INPUT_PULLDOWN);
+  pinMode(26, INPUT_PULLDOWN);
+  pinMode(27, INPUT_PULLDOWN);
+  pinMode(14, INPUT_PULLDOWN);
+  pinMode(23, OUTPUT);
+  pinMode(19, OUTPUT);
+  pinMode(18, OUTPUT);
+  pinMode(5, OUTPUT);
+  Serial.begin(115200);
+
+  Calibrate();
+
+  connect();
+}
+
 void loop() {
   input();
 
@@ -97,7 +136,8 @@ void loop() {
   if(!copter.command(roll, pitch, yaw, throttle, takeoff, panic, land, calibrate))
   {
     Serial.println("Send error, restart.");
-    ESP.restart();
+    //ESP.restart();
+    connect();
   }
 #endif
 
