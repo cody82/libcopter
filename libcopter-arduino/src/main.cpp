@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
-#include <SG500.hpp>
+#include <sg500.hpp>
 
 uint16_t throttle_raw;
 uint16_t pitch_raw;
